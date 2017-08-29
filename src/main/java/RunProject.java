@@ -36,7 +36,7 @@ public class RunProject {
         //System.out.println(iu.test("here"));
         try {
             //iu.iterate_directory(prop1.getProperty("imagefolder"), new ExifFile());
-            iu.process_directory(prop1.getProperty("imagefolder"));
+            iu.process_directory(prop1);
         } catch (Exception e) {
             e.printStackTrace();
         }

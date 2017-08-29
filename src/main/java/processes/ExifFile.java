@@ -36,7 +36,7 @@ public class ExifFile implements ProcessFile {
         }
 
         while ((s = stdError.readLine()) != null) {
-            throw new IOException("error running exif");
+            System.err.println(s);
         }
         return exif_fields;
     }
