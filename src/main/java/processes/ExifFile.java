@@ -4,10 +4,11 @@ import java.io.File;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.HashMap;
 
 public class ExifFile implements ProcessFile {
 
-    public void process(File f) throws IOException {
+    public HashMap<String,String> process(File f) throws IOException {
         Runtime rt = Runtime.getRuntime();
         String[] commands = {"exiftool",f.getAbsolutePath()};
         Process proc = rt.exec(commands);
@@ -18,18 +19,25 @@ public class ExifFile implements ProcessFile {
         BufferedReader stdError = new BufferedReader(new
                 InputStreamReader(proc.getErrorStream()));
 
+        HashMap<String,String> exif_fields = new HashMap<String,String>();
 
-// read the output from the command
-        System.out.println("Here is the standard output of the command:\n");
         String s = null;
         while ((s = stdInput.readLine()) != null) {
-            System.out.println(s);
+            //System.out.println(s);  //uncomment to see all fields
+            if (s.contains("File Size")) {
+                exif_fields.put("File Size",s.split(" : ")[1].replaceAll("\\D+","").trim());
+            }
+            if (s.contains("Image Width")) {
+                exif_fields.put("Image Width",s.split(" : ")[1].trim());
+            }
+            if (s.contains("Image Height")) {
+                exif_fields.put("Image Height",s.split(" : ")[1].trim());
+            }
         }
 
-// read any errors from the attempted command
-        System.out.println("Here is the standard error of the command (if any):\n");
         while ((s = stdError.readLine()) != null) {
-            System.out.println(s);
+            throw new IOException("error running exif");
         }
+        return exif_fields;
     }
 }

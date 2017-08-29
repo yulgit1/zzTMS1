@@ -4,6 +4,8 @@ import main.java.processes.ProcessFile;
 import main.java.processes.ExifFile;
 
 import java.io.File;
+import java.util.HashMap;
+import java.util.Map;
 
 public class ImageUtilities {
 
@@ -41,11 +43,19 @@ public class ImageUtilities {
 
             for (int i = 0; i < listOfFiles.length; i++) {
                 if (listOfFiles[i].isFile()) {
-                    new ExifFile().process(listOfFiles[i]);
+                    HashMap<String,String> fields = new ExifFile().process(listOfFiles[i]);
+                    printHashMap(fields);
                 }
             }
         } else {
             throw new Exception("Directory passed to iterate_directory must be a directory:" + folder.toString());
+        }
+    }
+
+    public void printHashMap(HashMap<String,String> hm) {
+        //putAll()
+        for (Map.Entry entry : hm.entrySet()) {
+            System.out.println(entry.getKey() + ": " + entry.getValue());
         }
     }
 }
