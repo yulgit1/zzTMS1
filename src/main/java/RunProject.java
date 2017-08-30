@@ -25,14 +25,14 @@ public class RunProject {
             ex.printStackTrace();
         } finally {
             if (input1 != null) {
-            try {
-                input1.close();
-            } catch (IOException e) {
-                e.printStackTrace();
+                try {
+                    input1.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
             }
         }
-    }
-        ImageUtilities iu = new ImageUtilities();
+        ImageUtilities iu = new ImageUtilities(prop1);
         //System.out.println(iu.test("here"));
         try {
             //iu.iterate_directory(prop1.getProperty("imagefolder"), new ExifFile());
@@ -48,6 +48,5 @@ public class RunProject {
         tmsconn.closeConnection();
         */
         //System.out.println(prop1.getProperty("tmshost"));
-        //TODO github, convertFile lambda method,exif File lambda method, other derived methods,
     }
 }

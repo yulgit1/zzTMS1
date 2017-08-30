@@ -10,7 +10,7 @@ public class ExifFile implements ProcessFile {
 
     public HashMap<String,String> process(File f) throws IOException {
         Runtime rt = Runtime.getRuntime();
-        String[] commands = {"exiftool",f.getAbsolutePath()};
+        String[] commands = {"exiftool","-n",f.getAbsolutePath()};
         Process proc = rt.exec(commands);
 
         BufferedReader stdInput = new BufferedReader(new

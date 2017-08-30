@@ -7,18 +7,25 @@ import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.sql.Connection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
 public class ImageUtilities {
 
-    public String test(String str) {
-        return "this is a test with string " + str;
+    //Connection conn;
+
+    public ImageUtilities(Properties prop1) {
+        //TmsConnection tmsconn = new TmsConnection(prop1.getProperty("tmshost"),
+        //        prop1.getProperty("tmshost"),
+        //        prop1.getProperty("tmspw"));
+        //conn = tmsconn.getConnection();
     }
 
-    public void imagemagick_convert(String image_path) {
-
+    public String test(String str) {
+        return "this is a test with string " + str;
     }
 
     public void iterate_directory(String folderStr, ProcessFile pf) throws Exception {
@@ -50,24 +57,26 @@ public class ImageUtilities {
                     if (listOfFiles[i].getName().equals(".DS_Store")) {
                         continue;
                     }
-                    HashMap<String,String> fields = new HashMap<String,String>();
-                    HashMap<String,String> exifs = new ExifFile().process(listOfFiles[i]);
-                    HashMap<String,String> md5 = checksum(listOfFiles[i]); //note: could go in supplied
-                    convert_to_thumbs(listOfFiles[i],prop1);
-                    move_orig_file(listOfFiles[i],prop1);
-                    HashMap<String,String> sup = supplied(listOfFiles[i],prop1);
+                    HashMap<String, String> fields = new HashMap<String, String>();
+                    HashMap<String, String> exifs = new ExifFile().process(listOfFiles[i]);
+                    HashMap<String, String> md5 = checksum(listOfFiles[i]); //note: could go in supplied
+                    convert_to_thumbs(listOfFiles[i], prop1);
+                    move_orig_file(listOfFiles[i], prop1);
+                    HashMap<String, String> sup = supplied(listOfFiles[i], prop1);
                     fields.putAll(exifs);
                     fields.putAll(md5);
                     fields.putAll(sup);
                     printHashMap(fields);
-                    /*renameFiles(f,
+                    renameFiles(listOfFiles[i],
                             prop1,
                             fields.get("coll"),
                             fields.get("obj"),
                             fields.get("objID"),
                             fields.get("accession"),
-                            fields.get("imagetype"));*/
-                    }
+                            fields.get("imagetype"));
+
+
+                }
             }
         } else {
             throw new Exception("Directory passed to iterate_directory must be a directory:" + folder.toString());
@@ -147,16 +156,19 @@ public class ImageUtilities {
 
     public void renameFile(File f, Properties prop1, String coll, String objectType,String idNum,String accessionNum,String imageType) {
         //obj\004\570\ba-obj-4570-0002-pub.jpg
+        String s = f.getName();
         File orig = new File(prop1.getProperty("outfolder")+"/"+f.getName());
         File new_orig = new File(prop1.getProperty("outfolder")+"/"+
-                coll+"-"+objectType+"-"+idNum+"-"+accessionNum+"-"+imageType+".jpg");
-
+                coll+"-"+objectType+"-"+idNum+"-"+accessionNum+"-"+imageType+s.substring(s.indexOf("."),s.length()));
+        orig.renameTo(new_orig);
     }
 
     public void renameThumbs(File f, Properties prop1, String coll, String objectType,String idNum,String accessionNum,String imageType) {
+        String s = f.getName();
         File thumb = new File(prop1.getProperty("thumbnailfolder")+"/thumb_"+f.getName());
         File new_thumb = new File(prop1.getProperty("thumbnailfolder")+"/"+
-                coll+"-"+objectType+"-"+idNum+"-"+accessionNum+"-"+imageType+".jpg");
+                coll+"-"+objectType+"-"+idNum+"-"+accessionNum+"-"+imageType+s.substring(s.indexOf("."),s.length()));
+        thumb.renameTo(new_thumb);
     }
 
     public void renameFiles(File f, Properties prop1, String coll, String objectType,String idNum,String accessionNum,String imageType) {
@@ -199,7 +211,7 @@ public class ImageUtilities {
         p.put("rendnum",getRendSortNum(p.get("coll"),p.get("obj"),p.get("objID"),p.get("accession"),p.get("imagetype")));
         p.put("sortnum",getRendSortNum(p.get("coll"),p.get("obj"),p.get("objID"),p.get("accession"),p.get("imagetype")));
         p.put("thumbfilename",getThumbFileName(p.get("coll"),p.get("obj"),p.get("objID"),p.get("accession"),p.get("imagetype")));
-        p.put("tableID",getTableID(p.get("obj")));
+        p.put("tableID",tableIDMap.get(p.get("obj")));
         p.put("rank",getRank());
         p.put("primaryDisplay",metadata.getProperty("primaryDisplay"));
         p.put("displayOrder",getRank());
@@ -219,23 +231,50 @@ public class ImageUtilities {
 
     public String getThumbFileName(String coll,String obj,String objID,String accession,String imagetype) {
         //obj\004\570\ba-obj-4570-0002-pub.jpg
-        return coll + "-" + obj + "-" + objID + "-" + accession + "-" + imagetype;
+        return obj +"/" + id_to_p(objID)+ "/" + coll + "-" + obj + "-" + objID + "-" + accession + "-" + imagetype;
     }
 
-    public String getTableID(String obj) {
-        if (obj.equals("obj")) {
-            return "108";
-        } else {
-            return "";
-        }
-    }
+    public static final Map<String,String> tableIDMap = Collections.unmodifiableMap(
+            //made up keys for now with exception of obj
+            new HashMap<String,String>() {{
+                put("con","23"); //Constituents
+                put("exh","47"); //Exhibitions
+                put("loa","81"); //Loans
+                put("cli","97"); //CondLineItems
+                put("obj","108"); //Objects
+                put("obr","126"); //ObjRights
+                put("his","187"); //HistEvents
+                put("shi","345"); //Shipments
+                put("cre","792"); //ConservationReports
+            }});
+
 
     public String getRank() {
-        //select * from
+        //pseudo codeselect max(Rank) +1 from MediaXrefs;
         return "3";
     }
 
-    //TODO flesh out filesize,.jpg,rename, thumbfilename,tableid,rank,thumbblob,sql
+    public String id_to_p(String id) {
+        String path = "";
+        switch (id.length()) {
+            case 1: path = "000/00" + id;
+                break;
+            case 2: path = "000/0" +id;
+                break;
+            case 3: path = "000/" + id;
+                break;
+            case 4: path = "00" + id.substring(0,1) +"/" + id.substring(1,4);
+                break;
+            case 5: path = "0" + id.substring(0,2) +"/" + id.substring(2,5);
+                break;
+            case 6: path = id.substring(0,3) +"/" + id.substring(3,6);
+                break;
+        }
+        return path;
+    }
+
+    //TODO flesh run w rename (test), thumbfilename (test),tableid (test),rank,thumbblob, (sql once got connection)
+    //TODO CAMEL
 
 
 }
