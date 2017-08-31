@@ -273,7 +273,7 @@ public class ImageUtilities {
         return path;
     }
 
-    //TODO flesh run w rename (test), thumbfilename (test),tableid (test),rank,thumbblob, (sql once got connection)
+    //TODO rank,thumbblob, (sql once got connection)
     //TODO CAMEL
 
 
